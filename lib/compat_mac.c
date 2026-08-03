@@ -49,6 +49,12 @@
 
 #define GU_FINDER_INVISIBLE 0x4000
 
+/* Well-known File Manager constants that the multiversal interfaces
+ * don't provide by name: the directory bit of ioFlAttrib (ioDirMask)
+ * and the ID of a volume's root directory (fsRtDirID). */
+#define GU_ATTRIB_DIR  0x10
+#define GU_ROOT_DIR_ID 2L
+
 /* ---- small helpers ---------------------------------------------------- */
 
 static void c2p(const char *s, Str255 p)
@@ -118,7 +124,7 @@ static void fill_info_from_pb(gu_finfo *out, const CInfoPBRec *pb,
 {
     memset(out, 0, sizeof(*out));
     p2c(name, out->name, sizeof(out->name));
-    if (pb->hFileInfo.ioFlAttrib & ioDirMask) {
+    if (pb->hFileInfo.ioFlAttrib & GU_ATTRIB_DIR) {
         out->is_dir = 1;
         out->mtime = (unsigned long)pb->dirInfo.ioDrMdDat;
         out->is_hidden =
@@ -174,7 +180,7 @@ GUDIR *gu_opendir(const char *path)
         return NULL;
     if (cat_info_for_spec(&spec, &pb, name) != noErr)
         return NULL;
-    if (!(pb.hFileInfo.ioFlAttrib & ioDirMask))
+    if (!(pb.hFileInfo.ioFlAttrib & GU_ATTRIB_DIR))
         return NULL;
     d = (GUDIR *)calloc(1, sizeof(GUDIR));
     if (!d)
@@ -402,8 +408,17 @@ int gu_getcwd(char *buf, int cap)
     char tmp[GU_PATH_MAX];
     int pos = (int)sizeof(tmp) - 1;
 
-    if (HGetVol(NULL, &vRefNum, &dirID) != noErr)
-        return GU_ERR;
+    {
+        /* HGetVol is glue the multiversal interfaces don't provide;
+         * PBHGetVol returns the real vRefNum + dirID of the default
+         * directory in ioWDVRefNum / ioWDDirID. */
+        WDPBRec wd;
+        memset(&wd, 0, sizeof(wd));
+        if (PBHGetVolSync(&wd) != noErr)
+            return GU_ERR;
+        vRefNum = wd.ioWDVRefNum;
+        dirID = wd.ioWDDirID;
+    }
     tmp[pos] = '\0';
     for (;;) {
         CInfoPBRec pb;
@@ -423,7 +438,7 @@ int gu_getcwd(char *buf, int cap)
         tmp[--pos] = ':';
         pos -= len;
         memcpy(tmp + pos, seg, (size_t)len);
-        if (dirID == fsRtDirID)
+        if (dirID == GU_ROOT_DIR_ID)
             break;
         dirID = pb.dirInfo.ioDrParID;
     }
