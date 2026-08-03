@@ -112,7 +112,7 @@ void gu_close(GUFILE *f)
 
 /* ---- buffered access -------------------------------------------------- */
 
-static int fill(GUFILE *f)
+static int fill_buf(GUFILE *f)
 {
     long got;
     if (f->eof)
@@ -131,7 +131,7 @@ static int fill(GUFILE *f)
 static int gu_getc(GUFILE *f)
 {
     if (f->bpos >= f->blen) {
-        if (fill(f) <= 0)
+        if (fill_buf(f) <= 0)
             return -1;
     }
     return f->buf[f->bpos++];
@@ -140,7 +140,7 @@ static int gu_getc(GUFILE *f)
 static int gu_peekc(GUFILE *f)
 {
     if (f->bpos >= f->blen) {
-        if (fill(f) <= 0)
+        if (fill_buf(f) <= 0)
             return -1;
     }
     return f->buf[f->bpos];
