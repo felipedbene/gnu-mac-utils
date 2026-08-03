@@ -38,6 +38,13 @@ int gu_optind = 1;
 char *gu_optarg = NULL;
 static int optpos = 1;
 
+void gu_getopt_reset(void)
+{
+    gu_optind = 1;
+    gu_optarg = NULL;
+    optpos = 1;
+}
+
 int gu_getopt(int argc, char **argv, const char *opts)
 {
     const char *arg;

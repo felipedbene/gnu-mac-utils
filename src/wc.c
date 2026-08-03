@@ -47,18 +47,22 @@ static void counts(GUFILE *f, long *l, long *w, long *c)
 static void report(long l, long w, long c, const char *name)
 {
     if (show_l)
-        printf("%7ld ", l);
+        fprintf(gu_out(), "%7ld ", l);
     if (show_w)
-        printf("%7ld ", w);
+        fprintf(gu_out(), "%7ld ", w);
     if (show_c)
-        printf("%7ld ", c);
+        fprintf(gu_out(), "%7ld ", c);
     if (name)
-        printf("%s", name);
-    printf("\n");
+        fprintf(gu_out(), "%s", name);
+    fprintf(gu_out(), "\n");
 }
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    show_l = show_w = show_c = 0;
+    tot_l = tot_w = tot_c = 0;
     int c, i;
     int status = 0;
     int nfiles;

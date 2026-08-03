@@ -16,20 +16,20 @@ static int flag_a, flag_l;
 static void print_entry(const gu_finfo *fi)
 {
     if (!flag_l) {
-        printf("%s\n", fi->name);
+        fprintf(gu_out(), "%s\n", fi->name);
         return;
     }
     {
         char when[32];
         gu_format_time(fi->mtime, when, sizeof(when));
         if (fi->is_dir) {
-            printf("d %4s %4s %9s %9s  %s  %s\n", "-", "-", "-", "-",
+            fprintf(gu_out(), "d %4s %4s %9s %9s  %s  %s\n", "-", "-", "-", "-",
                    when, fi->name);
         } else {
             char dsz[16], rsz[16];
             snprintf(dsz, sizeof(dsz), "%ld", fi->size);
             snprintf(rsz, sizeof(rsz), "%ld", fi->rsize);
-            printf("- %4s %4s %9s %9s  %s  %s\n",
+            fprintf(gu_out(), "- %4s %4s %9s %9s  %s  %s\n",
                    fi->type[0] ? fi->type : "-",
                    fi->creator[0] ? fi->creator : "-",
                    dsz, rsz, when, fi->name);
@@ -102,6 +102,9 @@ static int list_path(const char *path)
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    flag_a = flag_l = 0;
     int c, i;
     int status = 0;
     int npaths;
@@ -124,7 +127,7 @@ int gu_main(int argc, char **argv)
     }
     for (i = gu_optind; i < argc; i++) {
         if (npaths > 1)
-            printf("%s%s:\n", i > gu_optind ? "\n" : "", argv[i]);
+            fprintf(gu_out(), "%s%s:\n", i > gu_optind ? "\n" : "", argv[i]);
         status |= list_path(argv[i]);
     }
     return status;

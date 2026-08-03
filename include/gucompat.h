@@ -44,6 +44,12 @@ typedef struct GUFILE GUFILE;
 
 GUFILE *gu_open(const char *path);          /* NULL on failure           */
 GUFILE *gu_stdin(void);
+/* Shell hooks: gush redirects a pipeline stage's streams to files.
+ * Tools print through gu_out() instead of stdout, and gu_stdin() wraps
+ * whatever gu_set_in() installed. Passing NULL restores the console. */
+FILE *gu_out(void);
+void gu_set_out(FILE *f);
+void gu_set_in(FILE *f);
 long    gu_read(GUFILE *f, void *buf, long n);   /* 0 = EOF, <0 = error  */
 /* Read one line, stripping the terminator. Handles LF, CR and CRLF so
  * both Mac (CR) and Unix (LF) text files work on either platform.
@@ -81,6 +87,7 @@ int gu_copyfile(const char *src, const char *dst);  /* on Mac: data fork,
                                                info are all copied      */
 int gu_touch(const char *path);             /* create or bump mod time   */
 int gu_getcwd(char *buf, int cap);
+int gu_chdir(const char *path);             /* set the default directory */
 
 /* ---- time, sleep, system info ----------------------------------------- */
 unsigned long gu_now(void);
@@ -102,6 +109,7 @@ void gu_pathjoin(char *dst, int cap, const char *dir, const char *name);
 extern int gu_optind;
 extern char *gu_optarg;
 int gu_getopt(int argc, char **argv, const char *opts);
+void gu_getopt_reset(void);   /* gush calls this between builtin runs */
 
 /* ---- diagnostics ------------------------------------------------------- */
 void gu_warn(const char *fmt, ...);         /* "prog: msg\n" to stderr    */

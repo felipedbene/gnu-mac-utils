@@ -39,6 +39,27 @@ for a command line first (quotes group words, so
 | `sleep` | | blocks in `Delay()`; note cooperative multitasking |
 | `uname` | | reports the Mac OS version via `Gestalt` and the CPU (68K / PowerPC) |
 
+## gush — the shell
+
+Classic Mac OS has no terminal, so the project ships one. `gush` is a
+console application with **every utility linked in as a builtin**, a
+persistent prompt showing the current HFS directory, and `cd`:
+
+```
+Macintosh HD:Stuff % sort "My Disk:words" | uniq -c > counts
+Macintosh HD:Stuff % cd "Macintosh HD:Documents"
+Macintosh HD:Documents % ls -l
+```
+
+Pipes and `<` / `>` / `>>` redirection are emulated with temporary
+files between builtins (the OS has no processes to connect), which is
+indistinguishable in practice for these tools. Syntax rules: separate
+`|`, `<`, `>`, `>>` with spaces, and use double quotes around paths
+containing spaces. `help` lists the builtins, `exit` quits.
+
+`gush -c "command line"` runs a single command line and exits — that's
+how the test suite drives it.
+
 ## Mac-isms you should expect
 
 - **Paths are HFS paths.** `Macintosh HD:Documents:notes` is absolute
@@ -103,7 +124,7 @@ layer, which is how the logic is developed and CI-tested:
 
 ```sh
 make        # host binaries in bin/
-make test   # runs tests/run_tests.sh (55 checks)
+make test   # runs tests/run_tests.sh (65 checks)
 ```
 
 ## CI
@@ -132,6 +153,8 @@ lib/gufile.c          buffered read-only file handles + CR/LF/CRLF-aware
 lib/util.c            tiny getopt, HFS/POSIX path helpers, diagnostics
 lib/tool_main.c       shared main(): argument prompt + exit pause on Mac
 src/<tool>.c          one file per utility, platform-neutral
+shell/gush.c          the shell: prompt, parser, pipe/redirect plumbing
+shell/builtin_*.c     2-line wrappers linking each tool into gush
 ```
 
 The rule of the codebase: **utilities never touch platform APIs.**
@@ -141,9 +164,9 @@ the 1904 epoch, invisible files) in exactly one place.
 
 ## Status / roadmap
 
-Implemented: the 22 tools above, host test suite, dual-target build.
+Implemented: the 22 tools above, the gush shell (pipes, redirection,
+cd), host test suite, dual-target build.
 
 Not yet: `grep`/`sed`-class text tools, `df`/`du` (PBHGetVInfo),
-`find`, MPW tool variants (so they'd compose inside the MPW Shell),
-globbing in the argument prompt, and a tiny `sh`-like launcher so tools
-can be chained on the Mac itself.
+`find`, MPW tool variants, globbing, and shell niceties like history
+and `;` command lists.

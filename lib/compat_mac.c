@@ -448,6 +448,28 @@ int gu_getcwd(char *buf, int cap)
     return GU_OK;
 }
 
+int gu_chdir(const char *path)
+{
+    FSSpec spec;
+    CInfoPBRec pb;
+    Str255 name;
+    WDPBRec wd;
+    OSErr e;
+
+    e = spec_from_path(path, &spec);
+    if (e != noErr)
+        return map_oserr(e);
+    e = cat_info_for_spec(&spec, &pb, name);
+    if (e != noErr)
+        return map_oserr(e);
+    if (!(pb.hFileInfo.ioFlAttrib & GU_ATTRIB_DIR))
+        return GU_ENOTDIR;
+    memset(&wd, 0, sizeof(wd));
+    wd.ioVRefNum = spec.vRefNum;
+    wd.ioWDDirID = pb.dirInfo.ioDrDirID;
+    return map_oserr(PBHSetVolSync(&wd));
+}
+
 /* ---- time, sleep, system info ------------------------------------------ */
 
 unsigned long gu_now(void)

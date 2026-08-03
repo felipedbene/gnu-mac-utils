@@ -190,6 +190,13 @@ int gu_getcwd(char *buf, int cap)
     return GU_OK;
 }
 
+int gu_chdir(const char *path)
+{
+    if (chdir(path) != 0)
+        return map_errno();
+    return GU_OK;
+}
+
 unsigned long gu_now(void)
 {
     return (unsigned long)time(NULL);

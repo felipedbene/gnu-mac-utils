@@ -12,13 +12,16 @@ static void emit(const char *line, long count)
     if (flag_u && count > 1)
         return;
     if (flag_c)
-        printf("%7ld %s\n", count, line);
+        fprintf(gu_out(), "%7ld %s\n", count, line);
     else
-        printf("%s\n", line);
+        fprintf(gu_out(), "%s\n", line);
 }
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    flag_c = flag_d = flag_u = 0;
     static char prev[GU_LINE_MAX], line[GU_LINE_MAX];
     GUFILE *f;
     long count = 0;

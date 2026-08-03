@@ -17,15 +17,19 @@ static int cat_one(GUFILE *f)
     char line[GU_LINE_MAX];
     while (gu_getline(f, line, sizeof(line)) >= 0) {
         if (number_lines)
-            printf("%6ld\t%s\n", lineno++, line);
+            fprintf(gu_out(), "%6ld\t%s\n", lineno++, line);
         else
-            printf("%s\n", line);
+            fprintf(gu_out(), "%s\n", line);
     }
     return 0;
 }
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    number_lines = 0;
+    lineno = 1;
     int c, i;
     int status = 0;
 

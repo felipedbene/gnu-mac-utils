@@ -33,7 +33,7 @@ static int tail_one(GUFILE *f)
         count++;
     }
     for (i = count > nlines ? count - nlines : 0; i < count; i++)
-        printf("%s\n", ring[i % nlines]);
+        fprintf(gu_out(), "%s\n", ring[i % nlines]);
     for (i = 0; i < nlines; i++)
         free(ring[i]);
     free(ring);
@@ -42,6 +42,9 @@ static int tail_one(GUFILE *f)
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    nlines = 10;
     int c;
     GUFILE *f;
     int status;

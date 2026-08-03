@@ -70,6 +70,9 @@ static int cp_path(const char *src, const char *dst)
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    flag_r = 0;
     gu_finfo fi;
     const char *dst;
     int dst_is_dir;

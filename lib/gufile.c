@@ -86,10 +86,31 @@ GUFILE *gu_open(const char *path)
     return f;
 }
 
+/* Stream redirection hooks used by gush. When unset, tools read the
+ * console via stdin and print via stdout. */
+static FILE *gu_cur_in;
+static FILE *gu_cur_out;
+
+void gu_set_in(FILE *f)
+{
+    gu_cur_in = f;
+}
+
+void gu_set_out(FILE *f)
+{
+    gu_cur_out = f;
+}
+
+FILE *gu_out(void)
+{
+    return gu_cur_out ? gu_cur_out : stdout;
+}
+
 GUFILE *gu_stdin(void)
 {
     static GUFILE in;
-    in.f = stdin;
+    memset(&in, 0, sizeof(in));
+    in.f = gu_cur_in ? gu_cur_in : stdin;
     in.is_std = 1;
     return &in;
 }

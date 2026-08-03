@@ -126,6 +126,29 @@ check_status "rm missing exits 1" 1 $?
 "$BIN/rm" -f nonexistent
 check_status "rm -f missing exits 0" 0 $?
 
+# --- gush (the shell) -----------------------------------------------------------------
+cd "$TMP"
+printf 'b\na\nb\na\na\n' > words.txt
+check "gush echo"     "hi" "$("$BIN/gush" -c "echo hi")"
+check "gush pipe"     "$(printf '      3 a\n      2 b')" \
+                      "$("$BIN/gush" -c "sort words.txt | uniq -c")"
+check "gush 3 stages" "$(printf 'a\nb')" \
+                      "$("$BIN/gush" -c "cat words.txt | sort | uniq")"
+"$BIN/gush" -c "echo hello > out.txt"
+check "gush > redirect"  "hello" "$(cat out.txt)"
+"$BIN/gush" -c "echo again >> out.txt"
+check "gush >> append"   "$(printf 'hello\nagain')" "$(cat out.txt)"
+check "gush < redirect"  "5" "$("$BIN/gush" -c "wc -l < words.txt" | tr -d ' ')"
+"$BIN/gush" -c "frobnicate" 2>/dev/null
+check_status "gush unknown builtin exits 127" 127 $?
+mkdir -p gd/sub && touch gd/sub/f1.txt
+check "gush cd + pwd" "$TMP/gd/sub" \
+      "$(printf 'cd gd/sub\npwd\nexit\n' | "$BIN/gush")"
+# ls -l then plain ls: builtin state must not leak between commands.
+check "gush state isolation" "f1.txt" \
+      "$(printf 'cd gd/sub\nls -l\nls\n' | "$BIN/gush" | tail -1)"
+check "gush temp cleanup" "" "$(ls gush-pipe-*.tmp 2>/dev/null)"
+
 # --- date / uname / sleep ------------------------------------------------------------
 case "$("$BIN/date")" in
     [A-Z][a-z][a-z]\ [A-Z][a-z][a-z]*) echo "ok   date format" ;;

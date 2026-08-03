@@ -17,6 +17,6 @@ int gu_main(int argc, char **argv)
         gu_warn("cannot determine current directory");
         return 1;
     }
-    printf("%s\n", buf);
+    fprintf(gu_out(), "%s\n", buf);
     return 0;
 }

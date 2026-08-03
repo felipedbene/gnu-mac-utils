@@ -10,6 +10,6 @@ int gu_main(int argc, char **argv)
         return 1;
     }
     gu_dirname(argv[1], buf, sizeof(buf));
-    printf("%s\n", buf);
+    fprintf(gu_out(), "%s\n", buf);
     return 0;
 }

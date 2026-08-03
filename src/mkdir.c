@@ -43,6 +43,9 @@ static int mkdir_parents(const char *path)
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    flag_p = 0;
     int c, i;
     int status = 0;
 

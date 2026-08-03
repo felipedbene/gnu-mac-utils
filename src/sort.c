@@ -64,6 +64,9 @@ static int cmp(const void *a, const void *b)
 
 int gu_main(int argc, char **argv)
 {
+    /* Reset file-scope state: as gush builtins, tools run many
+     * times in one process. */
+    flag_n = flag_r = flag_u = 0;
     int c, i;
     long k;
 
@@ -96,7 +99,12 @@ int gu_main(int argc, char **argv)
     for (k = 0; k < nline; k++) {
         if (flag_u && k > 0 && strcmp(lines[k], lines[k - 1]) == 0)
             continue;
-        printf("%s\n", lines[k]);
+        fprintf(gu_out(), "%s\n", lines[k]);
     }
+    for (k = 0; k < nline; k++)
+        free(lines[k]);
+    free(lines);
+    lines = NULL;
+    nline = cap = 0;
     return 0;
 }

@@ -8,6 +8,6 @@ int gu_main(int argc, char **argv)
     (void)argc;
     (void)argv;
     gu_uname(buf, sizeof(buf));
-    printf("%s\n", buf);
+    fprintf(gu_out(), "%s\n", buf);
     return 0;
 }

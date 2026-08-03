@@ -13,11 +13,11 @@ int gu_main(int argc, char **argv)
         i++;
     }
     for (; i < argc; i++) {
-        fputs(argv[i], stdout);
+        fputs(argv[i], gu_out());
         if (i + 1 < argc)
-            fputc(' ', stdout);
+            fputc(' ', gu_out());
     }
     if (newline)
-        fputc('\n', stdout);
+        fputc('\n', gu_out());
     return 0;
 }

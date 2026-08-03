@@ -23,12 +23,21 @@ set(GU_TOOLS
     true false echo cat head tail wc sort uniq basename dirname
     pwd ls mkdir rmdir rm mv cp touch date sleep uname)
 
-set(GU_LIB_SOURCES
+set(GU_LIB_CORE
     lib/gufile.c
     lib/util.c
-    lib/tool_main.c
     lib/compat_mac.c
     lib/compat_posix.c)
+
+set(GU_LIB_SOURCES
+    ${GU_LIB_CORE}
+    lib/tool_main.c)
+
+# gush links every tool in as a builtin and has its own main().
+set(GU_SHELL_SOURCES shell/gush.c ${GU_LIB_CORE})
+foreach(tool IN LISTS GU_TOOLS)
+    list(APPEND GU_SHELL_SOURCES shell/builtin_${tool}.c)
+endforeach()
 
 # Retro68's toolchain files use different system names per target:
 # m68k = "Retro68", PowerPC = "RetroPPC", Carbon = "RetroCarbon".
@@ -40,6 +49,9 @@ if(CMAKE_SYSTEM_NAME MATCHES "Retro68|RetroPPC|RetroCarbon")
         target_compile_definitions(${tool} PRIVATE
             GU_MACOS GU_TOOLNAME="${tool}")
     endforeach()
+    add_application(gush CONSOLE ${GU_SHELL_SOURCES})
+    target_include_directories(gush PRIVATE include)
+    target_compile_definitions(gush PRIVATE GU_MACOS)
 else()
     foreach(tool IN LISTS GU_TOOLS)
         add_executable(${tool} src/${tool}.c ${GU_LIB_SOURCES})
@@ -47,4 +59,7 @@ else()
         target_compile_definitions(${tool} PRIVATE
             GU_HOST GU_TOOLNAME="${tool}")
     endforeach()
+    add_executable(gush ${GU_SHELL_SOURCES})
+    target_include_directories(gush PRIVATE include)
+    target_compile_definitions(gush PRIVATE GU_HOST)
 endif()

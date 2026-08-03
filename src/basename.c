@@ -19,6 +19,6 @@ int gu_main(int argc, char **argv)
         if (slen < blen && strcmp(buf + blen - slen, argv[2]) == 0)
             buf[blen - slen] = '\0';
     }
-    printf("%s\n", base);
+    fprintf(gu_out(), "%s\n", base);
     return 0;
 }
