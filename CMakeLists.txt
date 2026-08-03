@@ -14,7 +14,10 @@
 # thing without CMake.
 
 cmake_minimum_required(VERSION 3.9)
-project(retro68_coreutils C)
+# CXX must be enabled even though all sources are C: add_application's
+# CONSOLE option links RetroConsole, which is C++, and sets the target's
+# LINKER_LANGUAGE to CXX.
+project(retro68_coreutils C CXX)
 
 set(GU_TOOLS
     true false echo cat head tail wc sort uniq basename dirname
@@ -27,7 +30,9 @@ set(GU_LIB_SOURCES
     lib/compat_mac.c
     lib/compat_posix.c)
 
-if(CMAKE_SYSTEM_NAME MATCHES Retro68)
+# Retro68's toolchain files use different system names per target:
+# m68k = "Retro68", PowerPC = "RetroPPC", Carbon = "RetroCarbon".
+if(CMAKE_SYSTEM_NAME MATCHES "Retro68|RetroPPC|RetroCarbon")
     foreach(tool IN LISTS GU_TOOLS)
         # CONSOLE links Retro68's console runtime so stdio gets a window.
         add_application(${tool} CONSOLE src/${tool}.c ${GU_LIB_SOURCES})
