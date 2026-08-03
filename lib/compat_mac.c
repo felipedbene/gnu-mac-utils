@@ -18,11 +18,34 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* With Retro68's multiversal interfaces, <Files.h> pulls in the whole
+ * Toolbox API (Multiverse.h) and per-topic headers like <Script.h> may
+ * not exist; with Apple's Universal Interfaces each topic has its own
+ * header. Include what exists. */
 #include <Files.h>
-#include <Script.h>
-#include <OSUtils.h>
-#include <DateTimeUtils.h>
-#include <Gestalt.h>
+#if defined(__has_include)
+#  if __has_include(<Script.h>)
+#    include <Script.h>
+#  endif
+#  if __has_include(<OSUtils.h>)
+#    include <OSUtils.h>
+#  endif
+#  if __has_include(<DateTimeUtils.h>)
+#    include <DateTimeUtils.h>
+#  endif
+#  if __has_include(<Gestalt.h>)
+#    include <Gestalt.h>
+#  endif
+#else
+#  include <Script.h>
+#  include <OSUtils.h>
+#  include <DateTimeUtils.h>
+#  include <Gestalt.h>
+#endif
+
+#ifndef smSystemScript
+#define smSystemScript (-1)
+#endif
 
 #define GU_FINDER_INVISIBLE 0x4000
 
