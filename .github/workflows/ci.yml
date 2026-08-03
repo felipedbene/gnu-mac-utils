@@ -1,8 +1,13 @@
+# CI in the spirit of OpenTTD's pipeline: a fast host build with tests,
+# a real cross-compile matrix for the retro targets (inside the official
+# Retro68 toolchain container), per-push downloadable artifacts, and
+# zips attached to a GitHub Release when a v* tag is pushed.
 name: ci
 
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
 
 jobs:
@@ -14,3 +19,70 @@ jobs:
         run: make
       - name: Test
         run: make test
+
+  mac-cross:
+    name: mac-${{ matrix.target }}
+    runs-on: ubuntu-latest
+    container: ghcr.io/autc04/retro68:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: m68k
+            toolchain: m68k-apple-macos/cmake/retro68.toolchain.cmake
+          - target: powerpc
+            toolchain: powerpc-apple-macos/cmake/retroppc.toolchain.cmake
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: |
+          TOOLCHAIN="/Retro68-build/toolchain/${{ matrix.toolchain }}"
+          if [ ! -f "$TOOLCHAIN" ]; then
+            # Toolchain location moved between Retro68 image versions;
+            # fall back to searching for it.
+            TOOLCHAIN=$(find / -maxdepth 6 -path "*/${{ matrix.toolchain }}" 2>/dev/null | head -1)
+          fi
+          test -n "$TOOLCHAIN" && test -f "$TOOLCHAIN"
+          echo "Using toolchain file: $TOOLCHAIN"
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN"
+      - name: Build
+        run: cmake --build build
+      - name: Collect Mac binaries
+        run: |
+          mkdir -p dist
+          find build -maxdepth 2 \
+            \( -name '*.bin' -o -name '*.dsk' -o -name '*.APPL' \) \
+            -exec cp {} dist/ \;
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gnu-mac-utils-${{ matrix.target }}
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [host-build-and-test, mac-cross]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Package per target
+        run: |
+          cd artifacts
+          for d in */; do
+            (cd "$d" && zip -r "../${d%/}.zip" .)
+          done
+          ls -l *.zip
+      - name: Create release and attach binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" --generate-notes \
+            artifacts/*.zip ||
+          gh release upload "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" artifacts/*.zip --clobber

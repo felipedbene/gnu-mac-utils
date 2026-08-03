@@ -106,6 +106,20 @@ make        # host binaries in bin/
 make test   # runs tests/run_tests.sh (55 checks)
 ```
 
+## CI
+
+Every push runs two pipelines (OpenTTD-style):
+
+- **host-build-and-test** — POSIX build plus the full test suite.
+- **mac-cross** — a real cross-compile of every tool for 68K and
+  PowerPC inside the official Retro68 toolchain container
+  (`ghcr.io/autc04/retro68`). The resulting `.bin` / `.dsk` / `.APPL`
+  files are downloadable as per-target workflow artifacts, so each
+  commit yields binaries you can drop straight into an emulator.
+
+Pushing a `v*` tag additionally packages both targets into zips and
+attaches them to a GitHub Release.
+
 ## How it's put together
 
 ```
